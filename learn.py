@@ -6,28 +6,32 @@ import tensorflow as tf
 mnist = input_data.read_data_sets('MNIST_data/', one_hot=True)
 
 # define the model
-x = tf.placeholder(tf.float32, [None, 784])
-W = tf.Variable(tf.zeros([784, 10]))
-b = tf.Variable(tf.zeros([10]))
-y = tf.nn.softmax(tf.matmul(x, W) + b)
-init = tf.initialize_all_variables()
+with tf.name_scope("model"):
+    x = tf.placeholder(tf.float32, [None, 784], name="x")
+    W = tf.Variable(tf.zeros([784, 10]), name='W')
+    b = tf.Variable(tf.zeros([10]), name="b")
+    y = tf.nn.softmax(tf.matmul(x, W) + b)
 
 # placeholder for correct answers
-y_ = tf.placeholder(tf.float32, [None, 10])
+with tf.name_scope("expected"):
+    y_ = tf.placeholder(tf.float32, [None, 10], name="labels")
 
-# cost function
-cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
+with tf.name_scope("cross_entropy"):
+    cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
 
-# training step
-optimizer = tf.train.GradientDescentOptimizer(0.003)
-train_step = optimizer.minimize(cross_entropy)
+with tf.name_scope("train"):
+    optimizer = tf.train.GradientDescentOptimizer(0.003)
+    train_step = optimizer.minimize(cross_entropy)
 
-# % of correct answers found in batch
-is_correct = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
+with tf.name_scope("accuracy"):
+    is_correct = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+    accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
 
 sess = tf.Session()
-sess.run(init)
+sess.run(tf.initialize_all_variables())
+
+# visualise graph in Tensorboard
+tf.summary.FileWriter("/tmp/mnist_demo/2", graph=sess.graph)
 
 # train
 for i in range(1000):
