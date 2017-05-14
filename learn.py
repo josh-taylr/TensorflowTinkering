@@ -1,66 +1,70 @@
-from tensorflow.examples.tutorials.mnist import input_data
-import tensorflow as tf
+""" Train to recognise MNIST digits using a simple neural network 
+
+"""
+
+import sys
 import argparse
 
-mnist = input_data.read_data_sets('MNIST_data/', one_hot=True)
+import tensorflow as tf
 
-parser = argparse.ArgumentParser('Train a single layer NN on MNIST images.')
-parser.add_argument('--learn-rate', dest='learn_rate', type=float, default=0.003,
-                    help='Step value for the gradient descent algorithm')
-parser.add_argument('--summary-dir', dest='summary_dir', default='/tmp/mnist_demo',
-                    help="Directory to write summary data to")
-args = parser.parse_args()
-print args.learn_rate
+from tensorflow.examples.tutorials.mnist import input_data
 
-with tf.name_scope("model"):
-    x = tf.placeholder(tf.float32, [None, 784], name="images")
-    tf.summary.image("input", tf.reshape(x, [-1, 28, 28, 1]), 3)
-    W = tf.Variable(tf.zeros([784, 10]), name='weights')
-    b = tf.Variable(tf.zeros([10]), name="biases")
-    act = tf.matmul(x, W) + b
-    tf.summary.histogram('weights', W)
-    tf.summary.histogram('biases', b)
-    tf.summary.histogram('activations', act)
-    y = tf.nn.softmax(act)
+FLAGS = None
 
-# placeholder for correct answers
-y_ = tf.placeholder(tf.float32, [None, 10], name="labels")
 
-with tf.name_scope("cross_entropy"):
-    cross_entropy = -tf.reduce_sum(y_ * tf.log(y))
-    tf.summary.scalar('cross_entropy', cross_entropy)
+def main(_):
+    mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
 
-with tf.name_scope("training"):
-    optimizer = tf.train.GradientDescentOptimizer(args.learn_rate)
-    train_step = optimizer.minimize(cross_entropy)
+    with tf.name_scope('Model'):
+        x = tf.placeholder(tf.float32, [None, 784], name='input')
+        y_ = tf.placeholder(tf.float32, [None, 10], name='output')
+        W = tf.Variable(tf.zeros([784, 10]), name='weights')
+        b = tf.Variable(tf.zeros([10]), name='biases')
+        y = tf.matmul(x, W) + b
 
-with tf.name_scope("accuracy"):
-    is_correct = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
-    accuracy = tf.reduce_mean(tf.cast(is_correct, tf.float32))
-    tf.summary.scalar('accuracy', accuracy)
+        tf.summary.image('x_images', tf.reshape(x, [-1, 28, 28, 1]))
+        tf.summary.histogram('weights', W)
+        tf.summary.histogram('biases', b)
+        tf.summary.histogram('activations', y)
 
-sess = tf.Session()
-sess.run(tf.initialize_all_variables())
+    with tf.name_scope('Cross_Entropy'):
+        cross_entropy = tf.reduce_mean(
+            tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y))
+        tf.summary.scalar('cross_entropy', cross_entropy)
 
-# visualise graph in Tensorboard
-merged_summary = tf.summary.merge_all()
-writer = tf.summary.FileWriter("{0}/learn={1}".format(args.summary_dir, args.learn_rate), graph=sess.graph)
+    with tf.name_scope('Training'):
+        train_step = tf.train.GradientDescentOptimizer(
+            FLAGS.learn_rate).minimize(cross_entropy)
 
-# train
-for i in range(1000):
-    # load batch of images and correct answers
-    batch_X, batch_Y = mnist.train.next_batch(100)
-    train_data = {x: batch_X, y_: batch_Y}
-    sess.run(train_step, feed_dict=train_data)
+    with tf.name_scope('Accuracy'):
+        correct_predication = tf.equal(tf.arg_max(y, 1), tf.arg_max(y_, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct_predication, tf.float32))
+        tf.summary.scalar('accuracy', accuracy)
 
-    if i % 5 == 0:
-        s = sess.run(merged_summary, feed_dict=train_data)
-        writer.add_summary(s, i)
+    sess = tf.Session()
+    sess.run(tf.global_variables_initializer())
 
-    if i % 100 == 0:
-        a1, c1 = sess.run([accuracy, cross_entropy], feed_dict=train_data)
-        test_data = {x: mnist.test.images, y_: mnist.test.labels}
-        a2, c2 = sess.run([accuracy, cross_entropy], feed_dict=test_data)
-        s = "Batch {0:>3} Train: acc: {1:.2f}%, cost: {2:.4f} Test: acc: {1:.2f}%, cost: {2:.4f}"
-        print s.format(i, a1, c1, a2, c2)
+    merged_summary = tf.summary.merge_all()
+    writer = tf.summary.FileWriter(FLAGS.summary_dir, graph=sess.graph)
 
+    for step in range(1000):
+        batch = mnist.train.next_batch(100)
+        train_dict = {x: batch[0], y_: batch[1]}
+        if step % 10 == 0:
+            s = sess.run(merged_summary, feed_dict=train_dict)
+            writer.add_summary(s, step)
+        sess.run(train_step, feed_dict=train_dict)
+
+    print sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                        y_: mnist.test.labels})
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Train a single layer NN on MNIST images.')
+    parser.add_argument('--learn-rate', dest='learn_rate', type=float, default=0.03,
+                        help='Step value for the gradient descent algorithm')
+    parser.add_argument('--summary-dir', dest='summary_dir', default='/tmp/mnist/softmax',
+                        help="Directory to write summary data to")
+    parser.add_argument('--data_dir', default='/tmp/mnist/data',
+                        help='Directory for storing MNIST images')
+    FLAGS, unparsed = parser.parse_known_args()
+    tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
