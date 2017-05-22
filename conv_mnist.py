@@ -71,7 +71,7 @@ def main(_):
         y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
     with tf.name_scope('Cross_Entropy'):
-        cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv)
+        cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
         tf.summary.scalar('cross_entropy', cross_entropy)
 
     with tf.name_scope('Training'):
@@ -89,21 +89,20 @@ def main(_):
     writer = tf.summary.FileWriter(FLAGS.summary_dir, graph=sess.graph)
 
     for step in range(20000):
+        if step % 10 == 0:
+            test_dict = {x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}
+            summary, acc = sess.run([merged_summary, accuracy], feed_dict=test_dict)
+            writer.add_summary(summary, step)
+            print('Accuracy at step %s: %s' % (step, acc))
         batch = mnist.train.next_batch(50)
         train_dict = {x: batch[0], y_: batch[1], keep_prob: 0.5}
-        if step % 100 == 0:
-            summary = sess.run(merged_summary, feed_dict=train_dict)
-            writer.add_summary(summary, step)
         sess.run(train_step, feed_dict=train_dict)
-
-    test_dic = {x: mnist.test.images, y_: mnist.test.labels, keep_prob: 1.0}
-    print("Test accuracy: %g" % sess.run(accuracy, feed_dict=test_dic))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', default='./data',
                         help='Directory for caching MNIST data')
-    parser.add_argument('--summary_dir', default='./log',
+    parser.add_argument('--summary_dir', default='./log/conv',
                         help='Directory for storing summary data to view in Tensorboard')
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
