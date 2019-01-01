@@ -1,0 +1,21 @@
+version: '3'
+services:
+  tensorflow:
+    container_name: tf
+    image: tensorflow/tensorflow:1.1.0-devel
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+    working_dir: /code
+    volumes:
+     - .:/code
+    command: ["tail", "-f", "/dev/null"]
+  tensorboard:
+    container_name: tf_web
+    image: tensorflow/tensorflow:1.1.0-devel
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+    ports:
+     - "0.0.0.0:7007:6006"
+    volumes:
+     - ./logs:/logs
+    command: ["tensorboard", "--logdir=/logs", "--host", "0.0.0.0", "--port", "6006"]

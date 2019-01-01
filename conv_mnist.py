@@ -102,7 +102,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', default='./data',
                         help='Directory for caching MNIST data')
-    parser.add_argument('--summary_dir', default='./log/conv',
+    parser.add_argument('--summary_dir', default='./logs/conv',
                         help='Directory for storing summary data to view in Tensorboard')
     FLAGS, unparsed = parser.parse_known_args()
     tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
