@@ -1,0 +1,11 @@
+version: '3'
+services:
+  notebook:
+    container_name: tf_notebook
+    image: tensorflow/tensorflow:nightly-py3-jupyter
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=2
+    ports:
+     - "0.0.0.0:8888:8888"
+    volumes:
+     - .:/tf/notebooks

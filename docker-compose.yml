@@ -2,7 +2,7 @@ version: '3'
 services:
   tensorflow:
     container_name: tf
-    image: tensorflow/tensorflow:1.1.0-devel
+    image: tensorflow/tensorflow:1.12.0
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
     working_dir: /code
@@ -11,7 +11,7 @@ services:
     command: ["tail", "-f", "/dev/null"]
   tensorboard:
     container_name: tf_web
-    image: tensorflow/tensorflow:1.1.0-devel
+    image: tensorflow/tensorflow:1.12.0
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
     ports:
