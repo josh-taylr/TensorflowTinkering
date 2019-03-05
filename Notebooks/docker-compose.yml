@@ -2,7 +2,7 @@ version: '3'
 services:
   notebook:
     container_name: tf_notebook
-    image: tensorflow/tensorflow:nightly-py3-jupyter
+    image: tensorflow/tensorflow:1.13.1-py3-jupyter
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
     ports:
@@ -11,7 +11,7 @@ services:
      - .:/tf/notebooks
   tensorboard:
     container_name: tf_web
-    image: tensorflow/tensorflow:nightly-py3
+    image: tensorflow/tensorflow:1.13.1-py3
     environment:
       - TF_CPP_MIN_LOG_LEVEL=2
     ports:
