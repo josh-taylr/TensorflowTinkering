@@ -9,6 +9,7 @@ services:
      - "0.0.0.0:8888:8888"
     volumes:
      - .:/tf/notebooks
+     - ./data:/content/data
   tensorboard:
     container_name: tf_web
     image: tensorflow/tensorflow:1.13.1-py3
