@@ -7,16 +7,7 @@ services:
       - TF_CPP_MIN_LOG_LEVEL=2
     ports:
      - "0.0.0.0:8888:8888"
+     - "0.0.0.0:6006:6006"
     volumes:
      - .:/tf/notebooks
      - ./data:/content/data
-  tensorboard:
-    container_name: tf_web
-    image: tensorflow/tensorflow:1.13.1-py3
-    environment:
-      - TF_CPP_MIN_LOG_LEVEL=2
-    ports:
-     - "0.0.0.0:7007:6006"
-    volumes:
-     - ./logs:/logs
-    command: ["tensorboard", "--logdir=/logs", "--host", "0.0.0.0", "--port", "6006"]
